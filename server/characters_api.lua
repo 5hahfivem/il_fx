@@ -33,7 +33,8 @@ lib.callback.register('il_fx:createCharacter', function(source, data)
     local license = GetPlayerIdentifierByType(source, 'license')
     if not license then return false end
 
-    if MySQL.scalar.await('SELECT 1 FROM characters WHERE license = ?', { license }) then
+    local count = MySQL.scalar.await('SELECT COUNT(*) FROM characters WHERE license = ?', { license })
+    if count and count >= Config.MaxCharacters then
         return false, 'limit'
     end
 

@@ -21,7 +21,7 @@ local function ensureSchema()
             `metadata` LONGTEXT DEFAULT NULL,
             `last_position` LONGTEXT DEFAULT NULL,
             PRIMARY KEY (`state_id`),
-            UNIQUE KEY `license` (`license`)
+            KEY `license` (`license`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     ]])
     MySQL.query.await([[
@@ -31,6 +31,16 @@ local function ensureSchema()
             PRIMARY KEY (`id`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     ]])
+
+    local uniqueLicense = MySQL.scalar.await([[
+        SELECT NON_UNIQUE FROM information_schema.STATISTICS
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'characters' AND INDEX_NAME = 'license'
+        LIMIT 1
+    ]])
+    if uniqueLicense == 0 then
+        MySQL.query.await('ALTER TABLE `characters` DROP INDEX `license`')
+        MySQL.query.await('ALTER TABLE `characters` ADD INDEX `license` (`license`)')
+    end
 end
 
 local function loadSequence()

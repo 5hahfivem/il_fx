@@ -12,6 +12,8 @@ Config.StartingAccounts = {
 
 Config.Accounts = { 'cash', 'bank' }
 
+Config.MaxCharacters = 10
+
 Config.SpawnPosition = vec4(-1035.71, -2731.87, 12.86, 0.0)
 
 Config.Camera = {
