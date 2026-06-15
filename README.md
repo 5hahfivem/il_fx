@@ -30,7 +30,9 @@ Everything lives in `config/`.
 - `Config.Paycheck.Schedule` — an ox_lib cron expression (default `*/15 * * * *`). Pay accrues
   to `metadata.pendingPaycheck` and is collected from the ped in `Config.Paycheck.Ped`.
 - Jobs in `config/jobs.lua`, gangs in `config/gangs.lua`. A rank's `salary` drives the paycheck;
-  a salary of `0` falls back to UBI.
+  a salary of `0` falls back to UBI. Jobs also take optional `business`, `hasGarage`, and
+  `locations` fields (a `vector3` list or `{ type, pos, dist }` entries) for other resources to
+  read via `GetJob`/`GetJobs`.
 
 ## Commands
 
@@ -55,7 +57,8 @@ core:GetAffiliation(src)          core:SetAffiliation(src, gang, rank)
 core:GetBalance(src, account)     core:AddBalance(src, account, amount)
 core:RemoveBalance(src, account, amount)
 core:GetMetadata(src, key)        core:SetMetadata(src, key, value)
-core:GetJobs()                    core:GetGangs()
+core:GetJob(jobId)                core:GetJobs()
+core:GetGangs()
 ```
 
 Use the flat exports from other resources — the object returned by `GetCharacter` only keeps its
@@ -67,6 +70,8 @@ methods inside il_fx.
 exports.il_fx:IsLoaded()
 exports.il_fx:GetCharacter()
 exports.il_fx:GetStateId()
+exports.il_fx:GetJob(jobId)   exports.il_fx:GetJobs()
+exports.il_fx:GetGang(gangId) exports.il_fx:GetGangs()
 ```
 
 ## Events

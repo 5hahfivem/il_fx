@@ -119,6 +119,12 @@ exports('SetMetadata', function(source, key, value)
     return true
 end)
 
+---@param jobId string
+---@return JobConfig?
+exports('GetJob', function(jobId)
+    return Config.Jobs[jobId]
+end)
+
 ---@return table<string, JobConfig>
 exports('GetJobs', function()
     return Config.Jobs
