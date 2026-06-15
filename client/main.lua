@@ -3,7 +3,28 @@ LocalCharacter = {}
 local loaded = false
 local creationCam
 
+local function clearCreationCam()
+    if creationCam then
+        RenderScriptCams(false, false, 0, true, true)
+        DestroyCam(creationCam, false)
+        creationCam = nil
+    end
+end
+
+local function releasePed()
+    local ped = PlayerPedId()
+    SetEntityVisible(ped, true, false)
+    SetEntityCollision(ped, true, true)
+    FreezeEntityPosition(ped, false)
+    SetPlayerInvincible(PlayerId(), false)
+end
+
 local function enterLimbo()
+    DoScreenFadeOut(500)
+    while not IsScreenFadedOut() do
+        Wait(0)
+    end
+
     ShutdownLoadingScreen()
     ShutdownLoadingScreenNui()
 
@@ -18,9 +39,7 @@ local function enterLimbo()
         ClearPedTasksImmediately(ped)
     end
 
-    if creationCam then
-        DestroyCam(creationCam, false)
-    end
+    clearCreationCam()
     creationCam = CreateCam('DEFAULT_SCRIPTED_CAMERA', true)
     SetCamCoord(creationCam, cam.coords.x, cam.coords.y, cam.coords.z)
     SetCamRot(creationCam, cam.rotation.x, cam.rotation.y, cam.rotation.z, 2)
@@ -47,19 +66,9 @@ local function spawnCharacter(data)
         model = model,
         skipFade = true,
     }, function()
-        local ped = PlayerPedId()
-        SetPedDefaultComponentVariation(ped)
-        SetEntityVisible(ped, true, false)
-        SetEntityCollision(ped, true, true)
-        FreezeEntityPosition(ped, false)
-        SetPlayerInvincible(PlayerId(), false)
-
-        if creationCam then
-            RenderScriptCams(false, false, 0, true, true)
-            DestroyCam(creationCam, false)
-            creationCam = nil
-        end
-
+        SetPedDefaultComponentVariation(PlayerPedId())
+        clearCreationCam()
+        releasePed()
         ShutdownLoadingScreenNui()
         DoScreenFadeIn(500)
     end)
@@ -94,8 +103,6 @@ end)
 RegisterNetEvent('core:client:logout', function()
     loaded = false
     LocalCharacter = {}
-    DoScreenFadeOut(500)
-    Wait(500)
     enterLimbo()
     requestLoad()
 end)
@@ -121,6 +128,13 @@ lib.callback.register('core:requestIdentity', function()
         dateOfBirth = input[4],
         nationality = input[5],
     }
+end)
+
+AddEventHandler('onResourceStop', function(resource)
+    if resource ~= GetCurrentResourceName() then return end
+    clearCreationCam()
+    releasePed()
+    DoScreenFadeIn(0)
 end)
 
 ---@return boolean

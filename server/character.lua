@@ -231,20 +231,25 @@ function Character:toExport()
     }
 end
 
-function Character:save()
-    MySQL.update(
-        'UPDATE characters SET display_name = ?, identity = ?, accounts = ?, occupation = ?, affiliation = ?, metadata = ?, last_position = ? WHERE state_id = ?',
-        {
-            self.displayName,
-            encode(self.identity),
-            encode(self.accounts),
-            encode(self.occupation),
-            encode(self.affiliation),
-            encode(self.metadata),
-            encode(self.lastPosition),
-            self.stateId,
-        }
-    )
+---@param awaitQuery? boolean
+function Character:save(awaitQuery)
+    local query = 'UPDATE characters SET display_name = ?, identity = ?, accounts = ?, occupation = ?, affiliation = ?, metadata = ?, last_position = ? WHERE state_id = ?'
+    local params = {
+        self.displayName,
+        encode(self.identity),
+        encode(self.accounts),
+        encode(self.occupation),
+        encode(self.affiliation),
+        encode(self.metadata),
+        encode(self.lastPosition),
+        self.stateId,
+    }
+
+    if awaitQuery then
+        MySQL.update.await(query, params)
+    else
+        MySQL.update(query, params)
+    end
 end
 
 ---@param character Character
@@ -363,9 +368,10 @@ function Core.SetStateId(source, newId)
     return true
 end
 
-function Core.SaveAll()
+---@param awaitQuery? boolean
+function Core.SaveAll(awaitQuery)
     for _, character in pairs(Core.Characters) do
-        character:save()
+        character:save(awaitQuery)
     end
 end
 
@@ -430,5 +436,5 @@ end)
 
 AddEventHandler('onResourceStop', function(resource)
     if resource ~= GetCurrentResourceName() then return end
-    Core.SaveAll()
+    Core.SaveAll(true)
 end)
