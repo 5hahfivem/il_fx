@@ -14,6 +14,11 @@ Config.Accounts = { 'cash', 'bank' }
 
 Config.SpawnPosition = vec4(-1035.71, -2731.87, 12.86, 0.0)
 
+Config.Camera = {
+    coords = vec3(-682.0, -1092.0, 226.0),
+    rotation = vec3(0.0, 0.0, -45.0),
+}
+
 Config.SaveInterval = 10
 
 Config.StateId = {

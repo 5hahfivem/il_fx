@@ -112,3 +112,13 @@ lib.addCommand('bank', {
         Core.Notify(source, ('Bank: $%s'):format(character:getBalance('bank')), 'inform')
     end
 end)
+
+lib.addCommand('logout', {
+    help = 'Save and reload your character',
+}, function(source)
+    local character = Core.Characters[source]
+    if not character then return end
+    character:save()
+    Core.Characters[source] = nil
+    TriggerClientEvent('core:client:logout', source)
+end)
