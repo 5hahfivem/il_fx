@@ -94,3 +94,21 @@ lib.addCommand('stateid', {
         Core.Notify(source, ('Your StateID is %s%d.'):format(Config.StateId.Prefix, character.stateId), 'inform')
     end
 end)
+
+lib.addCommand('cash', {
+    help = 'Check your cash balance',
+}, function(source)
+    local character = Core.Characters[source]
+    if character then
+        Core.Notify(source, ('Cash: $%s'):format(character:getBalance('cash')), 'inform')
+    end
+end)
+
+lib.addCommand('bank', {
+    help = 'Check your bank balance',
+}, function(source)
+    local character = Core.Characters[source]
+    if character then
+        Core.Notify(source, ('Bank: $%s'):format(character:getBalance('bank')), 'inform')
+    end
+end)
