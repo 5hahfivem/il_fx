@@ -18,6 +18,7 @@ server_scripts {
     '@oxmysql/lib/MySQL.lua',
     'server/main.lua',
     'server/character.lua',
+    'server/characters_api.lua',
     'server/security.lua',
     'server/paycheck.lua',
     'server/commands.lua',

@@ -15,7 +15,7 @@ end
 ---@field firstName string
 ---@field lastName string
 ---@field gender? string
----@field dateOfBirth? integer
+---@field dateOfBirth? integer|string
 ---@field nationality? string
 
 ---@class Occupation
@@ -287,26 +287,22 @@ local function fromRow(source, row)
     return Character:new(source, record)
 end
 
+---Validate identity input and insert a new character row. Does not load it.
 ---@param source integer
 ---@param license string
----@return Character?
-function Core.CreateCharacter(source, license)
-    local input = lib.callback.await('core:requestIdentity', source)
+---@param input table
+---@return CharacterRecord?
+function Core.InsertCharacter(source, license, input)
     local firstName = sanitizeName(input and input.firstName)
     local lastName = sanitizeName(input and input.lastName)
-
-    if not firstName or not lastName then
-        DropPlayer(source, 'il_fx: character details were invalid.')
-        return nil
-    end
-
-    local nationality = input.nationality
-    if not validNationality[nationality] then
-        nationality = Config.Nationalities[1].value
-    end
+    if not firstName or not lastName then return nil end
 
     local gender = (input.gender == 'female' or input.gender == 'male') and input.gender or 'male'
-    local dateOfBirth = type(input.dateOfBirth) == 'number' and input.dateOfBirth or 0
+    local nationality = validNationality[input.nationality] and input.nationality or Config.Nationalities[1].value
+    local dateOfBirth = input.dateOfBirth
+    if type(dateOfBirth) ~= 'number' and type(dateOfBirth) ~= 'string' then
+        dateOfBirth = 0
+    end
 
     ---@type CharacterRecord
     local record = {
@@ -330,6 +326,21 @@ function Core.CreateCharacter(source, license)
             encode(record.metadata), encode(record.lastPosition),
         }
     )
+
+    return record
+end
+
+---@param source integer
+---@param license string
+---@return Character?
+function Core.CreateCharacter(source, license)
+    local input = lib.callback.await('core:requestIdentity', source)
+    local record = Core.InsertCharacter(source, license, input)
+
+    if not record then
+        DropPlayer(source, 'il_fx: character details were invalid.')
+        return nil
+    end
 
     return register(Character:new(source, record))
 end

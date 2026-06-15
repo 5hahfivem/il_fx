@@ -2,6 +2,7 @@
 LocalCharacter = {}
 local loaded = false
 local creationCam
+local external = GetConvar('il_fx:externalCharacters', 'false') == 'true'
 
 local function clearCreationCam()
     if creationCam then
@@ -81,60 +82,13 @@ local function requestLoad()
     end
 end
 
-CreateThread(function()
-    while not NetworkIsSessionStarted() do
-        Wait(250)
-    end
-    while GetResourceState('spawnmanager') ~= 'started' do
-        Wait(0)
-    end
-    exports.spawnmanager:setAutoSpawn(false)
-    enterLimbo()
-    requestLoad()
-end)
-
 RegisterNetEvent('core:client:characterLoaded', function(data)
     LocalCharacter = data
     loaded = true
-    spawnCharacter(data)
+    if not external then
+        spawnCharacter(data)
+    end
     TriggerEvent('core:client:onCharacterLoaded', data)
-end)
-
-RegisterNetEvent('core:client:logout', function()
-    loaded = false
-    LocalCharacter = {}
-    enterLimbo()
-    requestLoad()
-end)
-
-lib.callback.register('core:requestIdentity', function()
-    local input = lib.inputDialog('Create your character', {
-        { type = 'input', label = 'First Name', name = 'firstName', required = true, max = 24 },
-        { type = 'input', label = 'Last Name', name = 'lastName', required = true, max = 24 },
-        { type = 'select', label = 'Gender', name = 'gender', required = true, options = {
-            { value = 'male', label = 'Male' },
-            { value = 'female', label = 'Female' },
-        } },
-        { type = 'date', label = 'Date of Birth', name = 'dateOfBirth', required = true },
-        { type = 'select', label = 'Nationality', name = 'nationality', required = true, options = Config.Nationalities },
-    })
-
-    if not input then return nil end
-
-    return {
-        firstName = input[1],
-        lastName = input[2],
-        gender = input[3],
-        dateOfBirth = input[4],
-        nationality = input[5],
-    }
-end)
-
-AddEventHandler('onResourceStop', function(resource)
-    if resource ~= GetCurrentResourceName() then return end
-    clearCreationCam()
-    releasePed()
-    DoScreenFadeIn(0)
 end)
 
 ---@return boolean
@@ -151,3 +105,54 @@ end)
 exports('GetStateId', function()
     return LocalPlayer.state.stateId
 end)
+
+if not external then
+    CreateThread(function()
+        while not NetworkIsSessionStarted() do
+            Wait(250)
+        end
+        while GetResourceState('spawnmanager') ~= 'started' do
+            Wait(0)
+        end
+        exports.spawnmanager:setAutoSpawn(false)
+        enterLimbo()
+        requestLoad()
+    end)
+
+    RegisterNetEvent('core:client:logout', function()
+        loaded = false
+        LocalCharacter = {}
+        enterLimbo()
+        requestLoad()
+    end)
+
+    lib.callback.register('core:requestIdentity', function()
+        local input = lib.inputDialog('Create your character', {
+            { type = 'input', label = 'First Name', name = 'firstName', required = true, max = 24 },
+            { type = 'input', label = 'Last Name', name = 'lastName', required = true, max = 24 },
+            { type = 'select', label = 'Gender', name = 'gender', required = true, options = {
+                { value = 'male', label = 'Male' },
+                { value = 'female', label = 'Female' },
+            } },
+            { type = 'date', label = 'Date of Birth', name = 'dateOfBirth', required = true },
+            { type = 'select', label = 'Nationality', name = 'nationality', required = true, options = Config.Nationalities },
+        })
+
+        if not input then return nil end
+
+        return {
+            firstName = input[1],
+            lastName = input[2],
+            gender = input[3],
+            dateOfBirth = input[4],
+            nationality = input[5],
+        }
+    end)
+
+    AddEventHandler('onResourceStop', function(resource)
+        if resource ~= GetCurrentResourceName() then return end
+        clearCreationCam()
+        releasePed()
+        DoScreenFadeIn(0)
+    end)
+end
