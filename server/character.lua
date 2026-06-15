@@ -104,6 +104,11 @@ local function resolveAffiliation(id, rank)
     }
 end
 
+local function defaultPosition()
+    local pos = Config.SpawnPosition
+    return { x = pos.x, y = pos.y, z = pos.z, w = pos.w }
+end
+
 ---@class Character : OxClass
 ---@field source integer
 ---@field stateId integer
@@ -228,7 +233,18 @@ function Character:toExport()
         occupation = self.occupation,
         affiliation = self.affiliation,
         metadata = self.metadata,
+        lastPosition = self.lastPosition,
     }
+end
+
+function Character:capturePosition()
+    local ped = GetPlayerPed(self.source)
+    if not ped or ped == 0 then return end
+
+    local coords = GetEntityCoords(ped)
+    if coords.x == 0.0 and coords.y == 0.0 then return end
+
+    self.lastPosition = { x = coords.x, y = coords.y, z = coords.z, w = GetEntityHeading(ped) }
 end
 
 ---@param awaitQuery? boolean
@@ -281,7 +297,7 @@ local function fromRow(source, row)
         occupation = resolveOccupation(occupation and occupation.id or Config.Defaults.occupation, occupation and occupation.rank or 0),
         affiliation = resolveAffiliation(affiliation and affiliation.id or Config.Defaults.affiliation, affiliation and affiliation.rank or 0),
         metadata = metadata,
-        lastPosition = row.last_position and decode(row.last_position) or Config.SpawnPosition,
+        lastPosition = row.last_position and decode(row.last_position) or defaultPosition(),
     }
 
     return Character:new(source, record)
@@ -314,7 +330,7 @@ function Core.InsertCharacter(source, license, input)
         occupation = resolveOccupation(Config.Defaults.occupation, 0),
         affiliation = resolveAffiliation(Config.Defaults.affiliation, 0),
         metadata = { pendingPaycheck = 0 },
-        lastPosition = Config.SpawnPosition,
+        lastPosition = defaultPosition(),
     }
 
     MySQL.insert.await(
@@ -382,6 +398,7 @@ end
 ---@param awaitQuery? boolean
 function Core.SaveAll(awaitQuery)
     for _, character in pairs(Core.Characters) do
+        character:capturePosition()
         character:save(awaitQuery)
     end
 end
@@ -433,6 +450,7 @@ AddEventHandler('playerDropped', function()
 
     local character = Core.Characters[source]
     if not character then return end
+    character:capturePosition()
     character:save()
     Core.Characters[source] = nil
 end)
