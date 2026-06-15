@@ -1,0 +1,104 @@
+$engine: 3
+$minFxVersion: 12913
+$onesync: on
+
+name: il_fx
+version: 1.0.0
+author: 5hahfivem
+description: Minimal startup server for the il_fx core — ox_lib, oxmysql, bob74_ipl, and a loading screen.
+
+tasks:
+  ## server.cfg
+  - action: write_file
+    file: ./server.cfg
+    data: |
+      endpoint_add_tcp "0.0.0.0:30120"
+      endpoint_add_udp "0.0.0.0:30120"
+
+      sv_maxclients 48
+      sv_hostname "il_fx | fresh server"
+      sv_licenseKey "changeme"
+      sv_endpointprivacy true
+      set sv_enforceGameBuild 3258
+
+      set onesync on
+      set mysql_connection_string "{{dbConnectionString}}"
+
+      ensure mapmanager
+      ensure chat
+      ensure spawnmanager
+      ensure sessionmanager
+      ensure fivem
+      ensure hardcap
+      ensure rconlog
+      ensure scoreboard
+      ensure playernames
+
+      ensure oxmysql
+      ensure ox_lib
+      ensure bob74_ipl
+      ensure pe-basicloading
+
+      ensure il_fx
+
+      add_ace group.admin command allow
+      # add_principal identifier.fivem:YOUR_ID group.admin
+
+  ## database
+  - action: connect_database
+
+  ## fill {{vars}} in server.cfg (connection string, etc.)
+  - action: replace_string
+    mode: all_vars
+    file:
+      - ./server.cfg
+
+  ## default CFX resources
+  - action: download_github
+    src: https://github.com/citizenfx/cfx-server-data
+    ref: master
+    subpath: resources
+    dest: ./resources/[cfx]
+
+  ## oxmysql
+  - action: download_file
+    url: https://github.com/overextended/oxmysql/releases/latest/download/oxmysql.zip
+    path: ./tmp/oxmysql.zip
+  - action: unzip
+    src: ./tmp/oxmysql.zip
+    dest: ./resources/[ox]
+
+  ## ox_lib
+  - action: download_file
+    url: https://github.com/overextended/ox_lib/releases/latest/download/ox_lib.zip
+    path: ./tmp/ox_lib.zip
+  - action: unzip
+    src: ./tmp/ox_lib.zip
+    dest: ./resources/[ox]
+
+  ## il_fx core
+  - action: download_github
+    src: https://github.com/5hahfivem/il_fx
+    ref: main
+    dest: ./resources/[core]/il_fx
+
+  ## bob74_ipl
+  - action: download_github
+    src: https://github.com/Bob74/bob74_ipl
+    ref: master
+    dest: ./resources/bob74_ipl
+
+  ## loading screen
+  - action: download_github
+    src: https://github.com/DokaDoka/pe-basicloading
+    ref: ox
+    dest: ./resources/[pe]/pe-basicloading
+
+  - action: replace_string
+    mode: all_vars
+    file:
+      - ./resources/[pe]/pe-basicloading/web/config.js
+
+  ## cleanup
+  - action: remove_path
+    path: ./tmp
