@@ -30,6 +30,7 @@ local function spawnCharacter(data)
         heading = pos.w,
         model = model,
     }, function()
+        SetPedDefaultComponentVariation(PlayerPedId())
         ShutdownLoadingScreenNui()
     end)
 end
