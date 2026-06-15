@@ -27,6 +27,7 @@ server_scripts {
 
 client_scripts {
     'client/main.lua',
+    'client/blips.lua',
     'client/paycheck.lua',
     'client/compat_qbx.lua',
 }
